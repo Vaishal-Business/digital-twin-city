@@ -34,13 +34,12 @@
             geocoder: false,
             globe: false,
           });
-
+          Cesium.GoogleMaps.defaultApiKey = "AIzaSyDWcDMU0q8SfbEDaKw6reGBNZq2vT3iR6c";
           viewer.scene.skyAtmosphere.show = true;
 
           try {
             const tileset = await Cesium.createGooglePhotorealistic3DTileset({
                   onlyUsingWithGoogleGeocoder: true,
-                  apiOptions: { key: "AIzaSyDWcDMU0q8SfbEDaKw6reGBNZq2vT3iR6c" }, // <-- add your API key here
                 });
 
             viewer.scene.primitives.add(tileset);
