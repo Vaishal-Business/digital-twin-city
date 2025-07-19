@@ -39,8 +39,10 @@
 
           try {
             const tileset = await Cesium.createGooglePhotorealistic3DTileset({
-              onlyUsingWithGoogleGeocoder: true,
-            });
+                  onlyUsingWithGoogleGeocoder: true,
+                  apiOptions: { key: "AIzaSyDWcDMU0q8SfbEDaKw6reGBNZq2vT3iR6c" }, // <-- add your API key here
+                });
+
             viewer.scene.primitives.add(tileset);
           } catch (e) {
             console.error("Error loading Google photorealistic tiles:", e);
