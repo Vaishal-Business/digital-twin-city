@@ -37,7 +37,7 @@ window.startup = async function (Cesium) {
   sceneModePicker: false,
   baseLayerPicker: false,
   geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
-  globe: false,
+  globe: new Cesium.Globe(Cesium.Ellipsoid.WGS84),
 });
 
 
