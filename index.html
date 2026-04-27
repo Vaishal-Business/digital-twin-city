@@ -1,152 +1,33 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-    />
-    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
-    <title>Cesium Demo</title>
-    <script src="./CesiumUnminified/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
-    <style>
-      html, body, #cesiumContainer {
-        width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="cesiumContainer" class="fullSize"></div>
-    <div id="loadingOverlay"><h1>Loading...</h1></div>
-    <div id="toolbar"></div>
-    <script>
-      window.startup = async function (Cesium) {
-        'use strict';
+<!-- model-viewer -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
 
-        (async function () {
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            timeline: true,
-            animation: true,
-            sceneModePicker: false,
-            baseLayerPicker: false,
-            geocoder: false,
-            globe: false,
-          });
-          viewer.scene.skyAtmosphere.show = true;
+<input type="file" id="upload" accept=".glb,.usdz" />
 
-          try {
-            const apiKey = "AIzaSyDWcDMU0q8SfbEDaKw6reGBNZq2vT3iR6c";
+<model-viewer 
+  id="viewer"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  camera-controls
+  shadow-intensity="1"
+  style="width: 100%; height: 500px;">
+</model-viewer>
 
-            const tileset = await Cesium.createGooglePhotorealistic3DTileset({
-              onlyUsingWithGoogleGeocoder: true,
-              apiOptions: {
-                key: apiKey // <-- string, not object
-              }
-            });
+<script>
+const input = document.getElementById('upload');
+const viewer = document.getElementById('viewer');
 
+input.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-            viewer.scene.primitives.add(tileset);
-          } catch (e) {
-            console.error("Error loading Google photorealistic tiles:", e);
-          }
+  const url = URL.createObjectURL(file);
 
-          viewer.scene.camera.setView({
-            destination: new Cesium.Cartesian3(
-              -2693797.551060477,
-              -4297135.517094725,
-              3854700.7470414364
-            ),
-            orientation: new Cesium.HeadingPitchRoll(
-              4.6550106925119925,
-              -0.2863894863138836,
-              1.3561760425773173e-7
-            ),
-          });
-
-          function createModelEntity(url, positionProp) {
-            return viewer.entities.add({
-              position: positionProp,
-              orientation: new Cesium.VelocityOrientationProperty(positionProp),
-              model: {
-                uri: url,
-                minimumPixelSize: 64,
-                scale: 1.0,
-              },
-            });
-          }
-
-          const pathPositions = [];
-          const dynamicLine = viewer.entities.add({
-            polyline: {
-              positions: new Cesium.CallbackProperty(() => pathPositions, false),
-              width: 4,
-              material: Cesium.Color.CYAN,
-            },
-          });
-
-          const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-          handler.setInputAction((click) => {
-            const cart = viewer.scene.pickPosition(click.position);
-            if (Cesium.defined(cart)) {
-              pathPositions.push(cart);
-            }
-          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-          handler.setInputAction(() => {
-            if (pathPositions.length < 2) {
-              alert("Draw at least two points with left-click.");
-              return;
-            }
-            handler.destroy();
-
-            const start = Cesium.JulianDate.now();
-            const duration = 20;
-            const end = Cesium.JulianDate.addSeconds(start, duration, new Cesium.JulianDate());
-            const sampled = new Cesium.SampledPositionProperty();
-            const step = duration / (pathPositions.length - 1);
-
-            pathPositions.forEach((pos, i) => {
-              const t = Cesium.JulianDate.addSeconds(start, i * step, new Cesium.JulianDate());
-              sampled.addSample(t, pos);
-            });
-
-            const truck = createModelEntity(
-              "https://cesium.com/downloads/cesiumjs/releases/1.118/Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
-              sampled
-            );
-            truck.availability = new Cesium.TimeIntervalCollection([
-              new Cesium.TimeInterval({ start, stop: end }),
-            ]);
-            truck.path = {
-              resolution: 1,
-              material: new Cesium.PolylineGlowMaterialProperty({
-                color: Cesium.Color.YELLOW,
-                glowPower: 0.2,
-              }),
-              width: 6,
-            };
-
-            viewer.clock.startTime = start.clone();
-            viewer.clock.stopTime = end.clone();
-            viewer.clock.currentTime = start.clone();
-            viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
-            viewer.clock.multiplier = 1;
-            viewer.timeline.zoomTo(start, end);
-
-            viewer.trackedEntity = truck;
-          }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-        })();
-      };
-
-      if (typeof Cesium !== 'undefined') {
-        window.startupCalled = true;
-        window.startup(Cesium).catch((error) => {
-          "use strict";
-          console.error(error);
-        });
-      }
-    </script>
-  </body>
-</html>
+  if (file.name.endsWith('.usdz')) {
+    // iPhone AR uses USDZ
+    viewer.setAttribute('ios-src', url);
+  } else {
+    // Default = GLB
+    viewer.setAttribute('src', url);
+  }
+});
+</script>
